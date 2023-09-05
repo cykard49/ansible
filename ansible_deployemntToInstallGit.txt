@@ -1,38 +1,43 @@
 ##Configuring systems for Ansible use on Control and Workstation hosts:
 
-#1##install epel-release repo to get ansible package
+#1a##install epel-release repo to get ansible package
 sudo yum install epel-release
 
-#2##install Ansible on the control host:
+#1b##install Ansible on the control host:
 sudo yum install ansible
 
-#3C##reate Ansible user on the control host and workstation host
+#2a##Configure 'ansible' user on the control node for a pre-shared key access to Slave nodes w/out pw
+sudo su - ansible
+ssh-keygen #accept default options by pressing enter
+
+#2b##Copy the public key to all needed slave nodes
+ssh-copy-id <slaveHost> #provide ansible user a password
+logout
+
+#3a##reate Ansible user on the control host and workstation host
 #On each host, run the noted commands below:
 sudo useradd ansible
 sudo passwd ansible
 
-#4##Configure a pre-shared key for Ansible to allow log in from COntrol to Slave host w/out pw
-ssh-keygen #accept default options by pressing enter
-ssh-copy-id <slaveHost> #provide ansible user a password
-logout
-
-#5##Log into slave host
+#3b##Log into slave host to configure sudo access for Ansible on slave node so that ANsible can use sudo for any command with no pw prompt
 sudo visudo
 
-#6##and then Add text at the end of the line for sudoers
+#3c##and then Add text to the line with 'Same thing without a password' with %wheel
 ansible ALL=(ALL) NOPASSWD: ALL
 (:wq in vim)
 
-#7##On the control host as the ansible user run the following commands:
+#4a##On the control host as the ansible user, create inventory file
+sudo su - ansible
 vi /home/ansible/inventory
-
-#8##Add slave host IP info and then:
 (:wq in vim)
 
-#9##Create Ansible playbook in `/home/ansible/git-setup.yml` on the control node to install git on slave host
+#4b##Test those Slave hosts to make sure they are reachable by COntrol node
+ansible -i <path of ansible inventory file> <node/IP address> -m ping
+
+#5a##Create Ansible playbook in `/home/ansible/git-setup.yml` on the control node to install git on slave host
 vim /home/ansible/git-setup.yml
 
-#10##Add below to install git:
+#5b##Add below to install git:
 --- # install git on target host
 - hosts: workstation
   become: yes
@@ -41,9 +46,9 @@ vim /home/ansible/git-setup.yml
     yum:
       name: git
       state: latest
-#11##Save
+
 (:wq in vim)
 
-#12##Run:
+#6##Run:
 ansible-playbook -i /home/ansible/inventory /home/ansible/git-setup.yml
 
