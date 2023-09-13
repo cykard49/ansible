@@ -52,3 +52,10 @@ vim /home/ansible/git-setup.yml
 #6##Run:
 ansible-playbook -i /home/ansible/inventory /home/ansible/git-setup.yml
 
+
+
+
+##NOTE:
+#to validate httpd installed in the slave host use below command:
+curl <slave host IP>/home.html
+#if it returns large amount of html, which means the apache is running to serve content
